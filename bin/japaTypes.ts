@@ -6,7 +6,7 @@ declare module '@japa/runner' {
     assert: Assert
   }
 
-  interface Test<Context, TestData> {
+  interface Test {
     // notify TypeScript about custom test properties
   }
 }
