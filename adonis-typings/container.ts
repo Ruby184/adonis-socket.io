@@ -9,8 +9,10 @@
 
 declare module '@ioc:Adonis/Core/Application' {
   import { WsContract } from '@ioc:Ruby184/Socket.IO/Ws'
+  import { WsContextConstructorContract } from '@ioc:Ruby184/Socket.IO/WsContext'
 
   export interface ContainerBindings {
     'Ruby184/Socket.IO/Ws': WsContract
+    'Ruby184/Socket.IO/WsContext': WsContextConstructorContract
   }
 }

@@ -17,15 +17,37 @@ export default class WsProvider {
   constructor(protected app: ApplicationContract) {}
 
   /**
-   * Registering the health check provider
+   * Registering the main ws server
    */
   protected registerWs() {
     this.app.container.singleton('Ruby184/Socket.IO/Ws', (container) => {
       const { WsServer } = require('../src/Ws')
-      const Server = container.use('Adonis/Core/Server')
       const Config = container.use('Adonis/Core/Config')
 
-      return new WsServer(Server, Config.get('socket', {}))
+      return new WsServer(this.app, {
+        // TODO: handle transformaton of adonis cors config as they are not 100% compatible
+        cors: Config.get('cors', {}),
+        ...Config.get('socket', {}),
+      })
+    })
+  }
+
+  /**
+   * Registering ws context
+   */
+  protected registerWsContext() {
+    this.app.container.singleton('Ruby184/Socket.IO/WsContext', (container) => {
+      const { extendHttpContext } = require('../src/WsContext')
+      return extendHttpContext(container.resolveBinding('Adonis/Core/HttpContext'))
+    })
+  }
+
+  /**
+   * Registering ws middleware store to the container
+   */
+  protected registerMiddlewareStore() {
+    this.app.container.bind('Ruby184/Socket.IO/MiddlewareStore', () => {
+      return require('../src/MiddlewareStore').MiddlewareStore
     })
   }
 
@@ -34,13 +56,21 @@ export default class WsProvider {
    */
   public register() {
     this.registerWs()
+    this.registerWsContext()
+    this.registerMiddlewareStore()
   }
 
   /**
-   * Register hooks and health checkers on boot
+   * Do some monkey patching so things like auth is working fine with sockets
    */
   public boot() {
-    //
+    this.app.container.withBindings(
+      ['Adonis/Addons/Auth', 'Ruby184/Socket.IO/WsContext'],
+      (Auth, WsContext) => {
+        const { patchAuthManager } = require('../src/Patch/Auth')
+        patchAuthManager(Auth, WsContext)
+      }
+    )
   }
 
   /**

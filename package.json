@@ -42,6 +42,7 @@
   },
   "homepage": "https://github.com/Ruby184/adonis-socket.io#readme",
   "devDependencies": {
+    "@adonisjs/auth": "^8.0.12",
     "@adonisjs/core": "^5.5.3",
     "@adonisjs/mrm-preset": "^5.0.3",
     "@adonisjs/require-ts": "^2.0.10",
@@ -62,6 +63,11 @@
     "typescript": "^4.6.2"
   },
   "dependencies": {
+    "@poppinss/matchit": "^3.1.2",
+    "@poppinss/utils": "^4.0.2",
+    "co-compose": "^7.0.1",
+    "haye": "^3.0.0",
+    "macroable": "^6.0.1",
     "socket.io": "^4.4.1"
   },
   "peerDependencies": {
@@ -116,9 +122,9 @@
     }
   },
   "publishConfig": {
-		"access": "public",
-		"tag": "latest"
-	},
+    "access": "public",
+    "tag": "latest"
+  },
   "np": {
     "contents": ".",
     "anyBranch": false
@@ -130,14 +136,33 @@
     ],
     "templates": {
       "start": [
-        { "src": "start.txt", "dest": "socket.ts" }
+        "wsKernel.txt",
+        "socket.txt"
       ],
       "config": [
-        { "src": "config.txt", "dest": "socket.ts" }
+        {
+          "src": "config.txt",
+          "dest": "socket.ts"
+        }
       ]
     },
     "preloads": [
-      { "file": "./start/socket", "environment": ["web", "test"], "optional": true }
+      {
+        "file": "./start/wsKernel",
+        "environment": [
+          "web",
+          "test"
+        ],
+        "optional": true
+      },
+      {
+        "file": "./start/socket",
+        "environment": [
+          "web",
+          "test"
+        ],
+        "optional": true
+      }
     ]
   }
 }
