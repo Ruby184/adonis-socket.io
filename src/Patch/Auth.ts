@@ -21,9 +21,7 @@ export function patchAuthManager(
   Auth: AuthManagerContract,
   WsContext: WsContextConstructorContract
 ): void {
-  const {
-    AuthenticationException,
-  } = require('@adonisjs/auth/build/src/Exceptions/AuthenticationException')
+  const { AuthenticationException } = require('@adonisjs/auth/build/standalone')
   const originalMakeOatGuard = Auth['makeOatGuard']
 
   Auth['makeOatGuard'] = function makeOatGuard(

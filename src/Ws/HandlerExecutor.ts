@@ -83,6 +83,21 @@ export class HandlerExecutor {
     })
   }
 
+  // TODO: extract this to dedicated exception handler to report and handle
+  private toExtendedError(error: any): Error & { data: any } {
+    if (error.data) {
+      return error
+    }
+
+    error.data = {
+      code: error.code || 'E_UNKNOWN',
+      status: error.status || 500,
+      ...(process.env.NODE_ENV === 'development' ? { stack: error.stack } : {}),
+    }
+
+    return error
+  }
+
   private handleNewNamespace = (namespace: Namespace) => {
     const matched = this.store.match(namespace.name)
 
@@ -91,8 +106,7 @@ export class HandlerExecutor {
         await this.precompiler.runNamespaceMiddleware(this.getContext(socket, matched!))
         next()
       } catch (err) {
-        // TODO: handle erorrs serialization - assign code and status to data to be sent to client
-        next(err)
+        next(this.toExtendedError(err))
       }
     })
   }
