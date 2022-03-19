@@ -1,6 +1,6 @@
 {
   "name": "@ruby184/adonis-socket.io",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "AdonisJs 5 websocket provider using socket.io under the hood",
   "types": "build/adonis-typings/index.d.ts",
   "main": "build/providers/WsProvider.js",
