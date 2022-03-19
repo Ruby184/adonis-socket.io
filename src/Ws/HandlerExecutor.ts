@@ -102,12 +102,17 @@ export class HandlerExecutor {
       return
     }
 
-    // add checking of namespaces and handling for new connections
+    // if we have root namespace defined attach handlers
+    if (this.store.check('/')) {
+      this.handleNewNamespace(this.io.of('/').on('connection', this.handleConnection))
+    }
+
+    // add checking of dynamic namespaces and handling for new connections
     this.nsp = this.io
       .of((name, _, next) => next(null, this.store.check(name)))
       .on('connection', this.handleConnection)
 
-    // when new namespace is created add middleware
+    // when new dynamic namespace is created add middleware
     this.io.on('new_namespace', this.handleNewNamespace)
 
     this.io.attach(this.Server.instance, socketConfig)
