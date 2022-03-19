@@ -1,11 +1,21 @@
 # @ruby184/adonis-socket.io
-> Tagline
+> AdonisJs 5 websocket provider using socket.io under the hood
 
 [![github-actions-image]][github-actions-url] [![npm-image]][npm-url] [![license-image]][license-url] [![typescript-image]][typescript-url]
 
-A short brief
+This package is trying to implement main ideas from [this Adonis RFC](https://github.com/thetutlage/rfcs/blob/develop/active-rfcs/0000-websockets.md). Package is not production ready until v1.0. Use it at your own risk.
 
 ## Installation
+
+Install it from npm
+```
+npm i @ruby184/adonis-socket.io
+```
+and then configure it using adonis
+
+```
+node ace configure @ruby184/adonis-socket.io
+```
 
 ## Usage
 
