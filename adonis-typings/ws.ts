@@ -18,8 +18,8 @@ declare module '@ioc:Ruby184/Socket.IO/Ws' {
   } from '@ioc:Ruby184/Socket.IO/MiddlewareStore'
 
   export type EventHandler = ((ctx: WsContextContract, ...data: any[]) => any) | string
-  export type ConnectHandler = (ctx: WsContextContract) => any | string
-  export type DisconnectHandler = (ctx: WsContextContract, reason: string) => any | string
+  export type ConnectHandler = ((ctx: WsContextContract) => any) | string
+  export type DisconnectHandler = ((ctx: WsContextContract, reason: string) => any) | string
   export type NamespaceMiddlewareHandler = FunctionMiddlewareHandler | string
   export type ResolvedEventHandler =
     | {
