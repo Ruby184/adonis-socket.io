@@ -111,9 +111,9 @@ export class HandlerExecutor {
     })
   }
 
-  public attach(socketConfig: WsConfig): void {
+  public attach(socketConfig: WsConfig): boolean {
     if (!this.Server.instance) {
-      return
+      return false
     }
 
     // if we have root namespace defined attach handlers
@@ -130,5 +130,7 @@ export class HandlerExecutor {
     this.io.on('new_namespace', this.handleNewNamespace)
 
     this.io.attach(this.Server.instance, socketConfig)
+
+    return true
   }
 }

@@ -17,6 +17,8 @@ import { PreCompiler } from './PreCompiler'
 import { HandlerExecutor } from './HandlerExecutor'
 
 export class WsServer implements WsContract {
+  private attached: boolean = false
+
   public io = new IoServer()
 
   public middleware = new MiddlewareStore(this.application.container)
@@ -63,10 +65,14 @@ export class WsServer implements WsContract {
 
   public async attach(): Promise<void> {
     this.commit()
-    this.executor.attach(this.socketConfig)
+    this.attached = this.executor.attach(this.socketConfig)
   }
 
-  public close(): Promise<void> {
+  public async close(): Promise<void> {
+    if (!this.attached) {
+      return
+    }
+
     return new Promise((resolve, reject) => {
       this.io.close((err) => (err ? reject(err) : resolve()))
     })
