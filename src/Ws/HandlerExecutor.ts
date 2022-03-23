@@ -72,10 +72,12 @@ export class HandlerExecutor {
   private handleConnection = (socket: WsSocket) => {
     const ctx: WsContextContract = socket.ctx!
 
-    if (ctx.namespace.meta.resolvedHandlers!.disconnecting) {
-      socket.on('disconnecting', (reason: string) => {
-        this.precompiler.runConnectionHandler('disconnecting', ctx, reason)
-      })
+    for (const evt of ['disconnecting', 'disconnect'] as const) {
+      if (ctx.namespace.meta.resolvedHandlers![evt]) {
+        socket.on(evt, (reason: string) => {
+          this.precompiler.runConnectionHandler(evt, ctx, reason)
+        })
+      }
     }
 
     socket.onAny((event, ...args) => {

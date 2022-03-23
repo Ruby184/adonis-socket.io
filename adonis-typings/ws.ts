@@ -34,6 +34,7 @@ declare module '@ioc:Ruby184/Socket.IO/Ws' {
 
   export type NamespaceHandlers = Partial<{
     connection: ConnectHandler
+    disconnect: DisconnectHandler
     disconnecting: DisconnectHandler
     [event: string]: EventHandler
   }>
@@ -65,6 +66,7 @@ declare module '@ioc:Ruby184/Socket.IO/Ws' {
     on(event: string, handler: EventHandler): this
     middleware(middleware: NamespaceMiddlewareHandler | NamespaceMiddlewareHandler[]): this
     connected(handler: ConnectHandler): this
+    disconnecting(handler: DisconnectHandler): this
     disconnected(handler: DisconnectHandler): this
   }
 

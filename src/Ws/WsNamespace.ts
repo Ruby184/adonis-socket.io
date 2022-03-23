@@ -55,8 +55,12 @@ export class WsNamespace extends Macroable implements WsNamespaceContract {
     return this.addHandler('connection', handler)
   }
 
-  public disconnected(handler: DisconnectHandler): this {
+  public disconnecting(handler: DisconnectHandler): this {
     return this.addHandler('disconnecting', handler)
+  }
+
+  public disconnected(handler: DisconnectHandler): this {
+    return this.addHandler('disconnect', handler)
   }
 
   public toJSON(): NamespaceNode {

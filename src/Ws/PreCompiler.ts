@@ -30,7 +30,7 @@ export class PreCompiler {
   }
 
   public runConnectionHandler = (
-    event: 'connection' | 'disconnecting',
+    event: 'connection' | 'disconnect' | 'disconnecting',
     ctx: WsContextContract,
     ...args: any[]
   ) => {
