@@ -28,8 +28,8 @@ node ace configure @ruby184/adonis-socket.io
 
 ## Usage
 
-[github-actions-image]: https://github.com/adonis-socket.io/actions/workflows/test.yml
-[github-actions-url]: https://img.shields.io/github/workflow/status/ruby184/adonis-socket.io/test?style=for-the-badge "github-actions"
+[github-actions-image]: https://img.shields.io/github/workflow/status/ruby184/adonis-socket.io/test?style=for-the-badge
+[github-actions-url]: https://github.com/Ruby184/adonis-socket.io/actions/workflows/test.yml "github-actions"
 
 [npm-image]: https://img.shields.io/npm/v/@ruby184/adonis-socket.io.svg?style=for-the-badge&logo=npm
 [npm-url]: https://npmjs.org/package/@ruby184/adonis-socket.io "npm"
