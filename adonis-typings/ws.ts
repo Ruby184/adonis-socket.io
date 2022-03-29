@@ -52,7 +52,10 @@ declare module '@ioc:Ruby184/Socket.IO/Ws' {
 
   export type NamespacesTree = {
     tokens: any[]
-    namespaces: {
+    static: {
+      [pattern: string]: NamespaceNode
+    }
+    dynamic: {
       [pattern: string]: NamespaceNode
     }
   }

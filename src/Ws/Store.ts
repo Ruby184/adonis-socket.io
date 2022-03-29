@@ -12,11 +12,12 @@ import matchit from '@poppinss/matchit'
 import { Exception } from '@poppinss/utils'
 
 export class Store {
-  public tree: NamespacesTree = { tokens: [], namespaces: {} }
+  public tree: NamespacesTree = { tokens: [], static: {}, dynamic: {} }
 
   public add(nsp: NamespaceNode): this {
     const tokens = matchit.parse(nsp.pattern, {})
     const collectedParams: Set<string> = new Set()
+    let isDynamic: boolean = false
 
     /**
      * Avoiding duplicate route params
@@ -32,22 +33,42 @@ export class Store {
         } else {
           collectedParams.add(token.val)
         }
+
+        isDynamic = true
+      } else if (token.type === 2) {
+        // if it is a wildcard
+        isDynamic = true
       }
     }
 
     collectedParams.clear()
 
-    this.tree.tokens.push(tokens)
-    this.tree.namespaces[nsp.pattern] = nsp
+    if (isDynamic) {
+      this.tree.tokens.push(tokens)
+      this.tree.dynamic[nsp.pattern] = nsp
+    } else {
+      this.tree.static[nsp.pattern] = nsp
+    }
 
     return this
   }
 
-  public check(name: string): boolean {
+  public statics(): string[] {
+    return Object.keys(this.tree.static)
+  }
+
+  public isDynamic(name: string): boolean {
     return matchit.match(name, this.tree.tokens).length > 0
   }
 
   public match(name: string): null | MatchedNamespace {
+    if (this.tree.static[name]) {
+      return {
+        namespace: this.tree.static[name],
+        params: {},
+      }
+    }
+
     const matched = matchit.match(name, this.tree.tokens)
 
     if (!matched.length) {
@@ -55,7 +76,7 @@ export class Store {
     }
 
     return {
-      namespace: this.tree.namespaces[matched[0].old],
+      namespace: this.tree.dynamic[matched[0].old],
       params: matchit.exec(name, matched),
     }
   }

@@ -6,6 +6,7 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
 import type { ApplicationContract } from '@ioc:Adonis/Core/Application'
 import type { MatchedNamespace, WsConfig } from '@ioc:Ruby184/Socket.IO/Ws'
 import type { WsContextContract, WsSocket } from '@ioc:Ruby184/Socket.IO/WsContext'
@@ -100,7 +101,7 @@ export class HandlerExecutor {
     return error
   }
 
-  private handleNewNamespace = (namespace: Namespace) => {
+  private addMiddlewareToNamespace = (namespace: Namespace) => {
     const matched = this.store.match(namespace.name)
 
     namespace.use(async (socket, next) => {
@@ -118,19 +119,21 @@ export class HandlerExecutor {
       return false
     }
 
-    // if we have root namespace defined attach handlers
-    if (this.store.check('/')) {
-      this.handleNewNamespace(this.io.of('/').on('connection', this.handleConnection))
+    // first define static namespaces to socket.io
+    for (const nsp of this.store.statics()) {
+      this.addMiddlewareToNamespace(this.io.of(nsp, this.handleConnection))
     }
 
-    // add checking of dynamic namespaces and handling for new connections
-    this.nsp = this.io
-      .of((name, _, next) => next(null, this.store.check(name)))
-      .on('connection', this.handleConnection)
+    // add checking of dynamic namespaces
+    this.nsp = this.io.of(
+      (name, _, next) => next(null, this.store.isDynamic(name)),
+      this.handleConnection
+    )
 
-    // when new dynamic namespace is created add middleware
-    this.io.on('new_namespace', this.handleNewNamespace)
+    // when new dynamic namespace is created add middleware to it
+    this.io.on('new_namespace', this.addMiddlewareToNamespace)
 
+    // finally attach socket.io to adonis http server
     this.io.attach(this.Server.instance, socketConfig)
 
     return true
