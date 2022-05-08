@@ -8,15 +8,26 @@
  */
 
 import type { ApplicationContract } from '@ioc:Adonis/Core/Application'
-import type { WsContract, WsConfig } from '@ioc:Ruby184/Socket.IO/Ws'
+import type {
+  WsContract,
+  WsConfig,
+  NamespaceMatchersNode,
+  NamespaceParamMatcher,
+} from '@ioc:Ruby184/Socket.IO/Ws'
 import { Server as IoServer } from 'socket.io'
 import { WsNamespace } from './WsNamespace'
 import { Store } from './Store'
 import { MiddlewareStore } from '../MiddlewareStore'
 import { PreCompiler } from './PreCompiler'
 import { HandlerExecutor } from './HandlerExecutor'
+import { types } from '@poppinss/utils/build/helpers'
 
 export class WsServer implements WsContract {
+  /**
+   * Global matchers to test route params against regular expressions.
+   */
+  private paramMatchers: NamespaceMatchersNode = {}
+
   private attached: boolean = false
 
   public io = new IoServer()
@@ -35,19 +46,26 @@ export class WsServer implements WsContract {
 
   constructor(private application: ApplicationContract, private socketConfig: WsConfig) {}
 
-  private normalizeNamespace(ns: string): string {
-    if (ns === '/') {
-      return '/'
+  /**
+   * Define global route matcher
+   */
+  public where(param: string, matcher: NamespaceParamMatcher): this {
+    if (typeof matcher === 'string') {
+      this.paramMatchers[param] = { match: new RegExp(matcher) }
+    } else if (types.isRegexp(matcher)) {
+      this.paramMatchers[param] = { match: matcher }
+    } else {
+      this.paramMatchers[param] = matcher
     }
 
-    return `/${ns.replace(/^\//, '').replace(/\/$/, '')}`
+    return this
   }
 
   public namespace(pattern: string): WsNamespace {
-    const nsp = this.normalizeNamespace(pattern)
+    const nsp = WsNamespace.normalize(pattern)
 
     if (!this.namespaces[nsp]) {
-      this.namespaces[nsp] = new WsNamespace(nsp)
+      this.namespaces[nsp] = new WsNamespace(nsp, this.paramMatchers)
     }
 
     return this.namespaces[nsp]

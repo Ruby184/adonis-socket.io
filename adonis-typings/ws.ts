@@ -16,6 +16,7 @@ declare module '@ioc:Ruby184/Socket.IO/Ws' {
     FunctionMiddlewareHandler,
     WsMiddlewareStoreContract,
   } from '@ioc:Ruby184/Socket.IO/MiddlewareStore'
+  import { RouteParamMatcher, RouteMatchersNode } from '@ioc:Adonis/Core/Route'
 
   export type EventHandler = ((ctx: WsContextContract, ...data: any[]) => any) | string
   export type ConnectHandler = ((ctx: WsContextContract) => any) | string
@@ -50,6 +51,13 @@ declare module '@ioc:Ruby184/Socket.IO/Ws' {
     } & Record<string, any>
   }
 
+  export type NamespaceParamMatcher = RouteParamMatcher
+  export interface NamespaceMatchersNode extends RouteMatchersNode {}
+
+  export type NamespaceJSON = NamespaceNode & {
+    matchers: NamespaceMatchersNode
+  }
+
   export type NamespacesTree = {
     tokens: any[]
     static: {
@@ -66,16 +74,18 @@ declare module '@ioc:Ruby184/Socket.IO/Ws' {
   }
 
   export interface WsNamespaceContract {
+    where(param: string, matcher: NamespaceParamMatcher): this
     on(event: string, handler: EventHandler): this
     middleware(middleware: NamespaceMiddlewareHandler | NamespaceMiddlewareHandler[]): this
     connected(handler: ConnectHandler): this
     disconnecting(handler: DisconnectHandler): this
     disconnected(handler: DisconnectHandler): this
+    toJSON(): NamespaceJSON
   }
 
   export interface WsNamespaceConstructorContract
     extends MacroableConstructorContract<WsNamespaceContract> {
-    new (pattern: string): WsNamespaceContract
+    new (pattern: string, globalMatchers: NamespaceMatchersNode): WsNamespaceContract
   }
 
   export interface WsContract {
@@ -95,6 +105,11 @@ declare module '@ioc:Ruby184/Socket.IO/Ws' {
     middleware: WsMiddlewareStoreContract
 
     namespace(name: string): WsNamespaceContract
+
+    /**
+     * Define global route matcher
+     */
+    where(key: string, matcher: NamespaceParamMatcher): this
 
     attach(): Promise<void>
     close(): Promise<void>

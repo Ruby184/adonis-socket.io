@@ -12,22 +12,50 @@ import type {
   DisconnectHandler,
   EventHandler,
   NamespaceHandlers,
+  NamespaceJSON,
+  NamespaceMatchersNode,
   NamespaceMiddlewareHandler,
-  NamespaceNode,
+  NamespaceParamMatcher,
   WsNamespaceContract,
 } from '@ioc:Ruby184/Socket.IO/Ws'
+
+import { types } from '@poppinss/utils/build/helpers'
 import { Macroable } from 'macroable'
 
 export class WsNamespace extends Macroable implements WsNamespaceContract {
   protected static macros = {}
   protected static getters = {}
 
+  /**
+   * An object of matchers to be forwarded to the
+   * store. The matchers list is populated by
+   * calling `where` method
+   */
+  private matchers: NamespaceMatchersNode = {}
+
   private handlers: NamespaceHandlers = {}
 
   private middlewares: NamespaceMiddlewareHandler[][] = []
 
-  constructor(private pattern: string) {
+  constructor(private pattern: string, private globalMatchers: NamespaceMatchersNode) {
     super()
+  }
+
+  public static normalize(ns: string): string {
+    if (ns === '/') {
+      return '/'
+    }
+
+    return `/${ns.replace(/^\//, '').replace(/\/$/, '')}`
+  }
+
+  /**
+   * Returns an object of param matchers by merging global and local
+   * matchers. The local copy is given preference over the global
+   * one's
+   */
+  private getMatchers(): NamespaceMatchersNode {
+    return Object.assign({}, this.globalMatchers, this.matchers)
   }
 
   private addHandler(
@@ -39,6 +67,18 @@ export class WsNamespace extends Macroable implements WsNamespaceContract {
     }
 
     this.handlers[event] = handler
+    return this
+  }
+
+  public where(param: string, matcher: NamespaceParamMatcher): this {
+    if (typeof matcher === 'string') {
+      this.matchers[param] = { match: new RegExp(matcher) }
+    } else if (types.isRegexp(matcher)) {
+      this.matchers[param] = { match: matcher }
+    } else {
+      this.matchers[param] = matcher
+    }
+
     return this
   }
 
@@ -63,10 +103,11 @@ export class WsNamespace extends Macroable implements WsNamespaceContract {
     return this.addHandler('disconnect', handler)
   }
 
-  public toJSON(): NamespaceNode {
+  public toJSON(): NamespaceJSON {
     return {
       pattern: this.pattern,
       handlers: this.handlers,
+      matchers: this.getMatchers(),
       middleware: this.middlewares.flat(),
       meta: {},
     }

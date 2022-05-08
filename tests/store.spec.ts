@@ -14,7 +14,7 @@ test.group('Namespace Store | add', () => {
 
       const store = new Store()
 
-      store.add(namespace)
+      store.add({ ...namespace, matchers: {} })
 
       assert.deepEqual(store.tree, {
         tokens: [],
@@ -93,7 +93,7 @@ test.group('Namespace Store | add', () => {
 
       const store = new Store()
 
-      store.add(namespace)
+      store.add({ ...namespace, matchers: {} })
 
       assert.deepEqual(store.tree, {
         tokens: [tokens],
@@ -116,7 +116,7 @@ test.group('Namespace Store | add', () => {
       },
     ])
     .run(({ assert }, { pattern, duplicate }) => {
-      const namespace = { pattern, handlers: {}, meta: {}, middleware: [] }
+      const namespace = { pattern, handlers: {}, meta: {}, middleware: [], matchers: {} }
       const store = new Store()
       const fn = () => store.add(namespace)
 
@@ -146,6 +146,7 @@ test.group('Namespace Store | statics and isDynamic', (group) => {
         handlers: {},
         meta: {},
         middleware: [],
+        matchers: {},
       })
     }
   })
@@ -161,7 +162,7 @@ test.group('Namespace Store | statics and isDynamic', (group) => {
       { name: '/admin/child', outcome: false },
       { name: '/nonexistent', outcome: false },
       { name: '/doesnot/exist', outcome: false },
-      // { name: '/channels/@me', outcome: false },
+      { name: '/channels/@me', outcome: false },
       { name: '/channels/general', outcome: true },
       { name: '/channels/general/ruby184', outcome: false },
       { name: '/users', outcome: true },
@@ -197,6 +198,7 @@ test.group('Namespace Store | match', (group) => {
         handlers: {},
         meta: {},
         middleware: [],
+        matchers: {},
       })
     }
   })

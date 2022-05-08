@@ -7,7 +7,7 @@
  * file that was distributed with this source code.
  */
 
-import type { NamespaceNode } from '@ioc:Ruby184/Socket.IO/Ws'
+import type { NamespaceJSON } from '@ioc:Ruby184/Socket.IO/Ws'
 import type { WsContextContract } from '@ioc:Ruby184/Socket.IO/WsContext'
 import type {
   ResolvedMiddlewareHandler,
@@ -52,7 +52,7 @@ export class PreCompiler {
     this.resolver = container.getResolver(undefined, 'wsControllers', 'App/Controllers/Ws')
   }
 
-  private compileHandlers(nsp: NamespaceNode) {
+  private compileHandlers(nsp: NamespaceJSON) {
     nsp.meta.resolvedHandlers = {}
 
     for (const [event, handler] of Object.entries(nsp.handlers)) {
@@ -64,7 +64,7 @@ export class PreCompiler {
     }
   }
 
-  private compileMiddleware(nsp: NamespaceNode) {
+  private compileMiddleware(nsp: NamespaceJSON) {
     const list = nsp.middleware.map((item) => {
       if (typeof item === 'function') {
         return { type: 'function', value: item, args: [] }
@@ -92,7 +92,7 @@ export class PreCompiler {
       .register(list)
   }
 
-  public compileNamespace(nsp: NamespaceNode) {
+  public compileNamespace(nsp: NamespaceJSON) {
     this.compileHandlers(nsp)
     this.compileMiddleware(nsp)
   }

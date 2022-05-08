@@ -7,15 +7,20 @@
  * file that was distributed with this source code.
  */
 
-import type { MatchedNamespace, NamespaceNode, NamespacesTree } from '@ioc:Ruby184/Socket.IO/Ws'
+import type {
+  MatchedNamespace,
+  NamespaceJSON,
+  NamespaceNode,
+  NamespacesTree,
+} from '@ioc:Ruby184/Socket.IO/Ws'
 import matchit from '@poppinss/matchit'
-import { Exception } from '@poppinss/utils'
+import { lodash, Exception } from '@poppinss/utils'
 
 export class Store {
   public tree: NamespacesTree = { tokens: [], static: {}, dynamic: {} }
 
-  public add(nsp: NamespaceNode): this {
-    const tokens = matchit.parse(nsp.pattern, {})
+  public add(nsp: NamespaceJSON): this {
+    const tokens = matchit.parse(nsp.pattern, nsp.matchers)
     const collectedParams: Set<string> = new Set()
     let isDynamic: boolean = false
 
@@ -43,11 +48,18 @@ export class Store {
 
     collectedParams.clear()
 
+    const namespace = lodash.pick(nsp, [
+      'pattern',
+      'handlers',
+      'meta',
+      'middleware',
+    ]) as NamespaceNode
+
     if (isDynamic) {
       this.tree.tokens.push(tokens)
-      this.tree.dynamic[nsp.pattern] = nsp
+      this.tree.dynamic[nsp.pattern] = namespace
     } else {
-      this.tree.static[nsp.pattern] = nsp
+      this.tree.static[nsp.pattern] = namespace
     }
 
     return this
@@ -58,7 +70,7 @@ export class Store {
   }
 
   public isDynamic(name: string): boolean {
-    return matchit.match(name, this.tree.tokens).length > 0
+    return !this.tree.static[name] && matchit.match(name, this.tree.tokens).length > 0
   }
 
   public match(name: string): null | MatchedNamespace {
