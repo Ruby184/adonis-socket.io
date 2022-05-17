@@ -16,7 +16,11 @@ declare module '@ioc:Ruby184/Socket.IO/Ws' {
     FunctionMiddlewareHandler,
     WsMiddlewareStoreContract,
   } from '@ioc:Ruby184/Socket.IO/MiddlewareStore'
-  import { RouteParamMatcher, RouteMatchersNode } from '@ioc:Adonis/Core/Route'
+  import {
+    RouteParamMatcher,
+    RouteMatchersNode,
+    RouteMatchersContract,
+  } from '@ioc:Adonis/Core/Route'
 
   export type EventHandler = ((ctx: WsContextContract, ...data: any[]) => any) | string
   export type ConnectHandler = ((ctx: WsContextContract) => any) | string
@@ -86,16 +90,25 @@ declare module '@ioc:Ruby184/Socket.IO/Ws' {
   export interface WsNamespaceConstructorContract
     extends MacroableConstructorContract<WsNamespaceContract> {
     new (pattern: string, globalMatchers: NamespaceMatchersNode): WsNamespaceContract
+    normalize(pattern: string): string
+  }
+
+  export interface NamespaceMatchersContract extends RouteMatchersContract {}
+
+  export interface NamespaceMatchersConstructorContract
+    extends MacroableConstructorContract<NamespaceMatchersContract> {
+    new (): NamespaceMatchersContract
   }
 
   export interface WsContract {
     /**
-     * Exposing WsNamespace constructor to be extended from outside
+     * Exposing WsNamespace and NamespaceMatchers constructors to be extended from outside
      */
     WsNamespace: WsNamespaceConstructorContract
+    NamespaceMatchers: NamespaceMatchersConstructorContract
 
     /**
-     * Reference to original socket.io server
+     * Reference to the original socket.io server
      */
     io: IoServer
 
@@ -104,10 +117,18 @@ declare module '@ioc:Ruby184/Socket.IO/Ws' {
      */
     middleware: WsMiddlewareStoreContract
 
+    /**
+     * Shortcut methods for commonly used matchers (extending the route matchers from adonis router)
+     */
+    matchers: NamespaceMatchersContract
+
+    /**
+     * Define a namespace with given name or pattern
+     */
     namespace(name: string): WsNamespaceContract
 
     /**
-     * Define global route matcher
+     * Define global namespace matcher
      */
     where(key: string, matcher: NamespaceParamMatcher): this
 
