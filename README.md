@@ -17,14 +17,15 @@ and then configure it using adonis
 node ace configure @ruby184/adonis-socket.io
 ```
 ## TODO
-- [ ] allow `.where` regex definition for namespace dynamic parameters
-- [ ] allow to define controller namespace for socket.io namespace
+- [x] allow `.where` regex definition for namespace dynamic parameters
+- [x] allow to define controller namespace for socket.io namespace
 - [x] define static namespaces directly as socket.io namespaces and use matching only for dynamic ones (perf)
 - [ ] test everything
-- [ ] look how we can make use of socket middleware which is a function that gets executed for every incoming Packet
-- [ ] handle transformaton of adonis cors config to socket.io as they are not 100% compatible
 - [ ] we should not create and use response, but return Proxy to intercept and throw error when user tries to use response in websocket context
 - [ ] extract errors handling to dedicated exception handler to report and handle
+- [ ] look at how to make easy integration of socket.io multi server support with adonis
+- [ ] look how we can make use of socket middleware which is a function that gets executed for every incoming Packet
+- [ ] handle transformaton of adonis cors config to socket.io as they are not 100% compatible
 
 ## Usage
 
