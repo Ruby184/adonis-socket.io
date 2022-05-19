@@ -32,15 +32,15 @@ export class PreCompiler {
   public runConnectionHandler = (
     event: 'connection' | 'disconnect' | 'disconnecting',
     ctx: WsContextContract,
-    ...args: any[]
+    reason?: any
   ) => {
-    const routeHandler = ctx.namespace.meta.resolvedHandlers![event]
+    const routeHandler = ctx.namespace.meta.resolvedHandlers![event]!
 
     if (routeHandler.type === 'function') {
-      return routeHandler.handler(ctx, ...args)
+      return routeHandler.handler(ctx, reason)
     }
 
-    return this.resolver.call(routeHandler, undefined, [ctx].concat(args))
+    return this.resolver.call(routeHandler, undefined, [ctx].concat(reason))
   }
 
   /**

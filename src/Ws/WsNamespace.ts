@@ -35,7 +35,15 @@ export class WsNamespace extends Macroable implements WsNamespaceContract {
 
   private handlers: NamespaceHandlers = {}
 
+  /**
+   * An array of middlewares. Added using `middleware` function
+   */
   private middlewares: NamespaceMiddlewareHandler[][] = []
+
+  /**
+   * Storing the namespace explicitly set using `namespace` method
+   */
+  private controllerNamespace: string
 
   constructor(private pattern: string, private globalMatchers: NamespaceMatchersNode) {
     super()
@@ -82,6 +90,14 @@ export class WsNamespace extends Macroable implements WsNamespaceContract {
     return this
   }
 
+  /**
+   * Define controller namespace for a given route
+   */
+  public namespace(namespace: string): this {
+    this.controllerNamespace = namespace
+    return this
+  }
+
   public on(event: string, handler: EventHandler): this {
     return this.addHandler(event, handler)
   }
@@ -109,7 +125,9 @@ export class WsNamespace extends Macroable implements WsNamespaceContract {
       handlers: this.handlers,
       matchers: this.getMatchers(),
       middleware: this.middlewares.flat(),
-      meta: {},
+      meta: {
+        namespace: this.controllerNamespace,
+      },
     }
   }
 }

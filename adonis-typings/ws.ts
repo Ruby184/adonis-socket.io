@@ -26,10 +26,10 @@ declare module '@ioc:Ruby184/Socket.IO/Ws' {
   export type ConnectHandler = ((ctx: WsContextContract) => any) | string
   export type DisconnectHandler = ((ctx: WsContextContract, reason: string) => any) | string
   export type NamespaceMiddlewareHandler = FunctionMiddlewareHandler | string
-  export type ResolvedEventHandler =
+  export type ResolvedHandler<T> =
     | {
         type: 'function'
-        handler: Exclude<EventHandler, string>
+        handler: Exclude<T, string>
       }
     | {
         type: 'alias' | 'binding'
@@ -49,7 +49,11 @@ declare module '@ioc:Ruby184/Socket.IO/Ws' {
     handlers: NamespaceHandlers
     middleware: NamespaceMiddlewareHandler[]
     meta: {
-      resolvedHandlers?: { [event: string]: ResolvedEventHandler }
+      resolvedHandlers?: {
+        [Key in keyof NamespaceHandlers]:
+          | ResolvedHandler<Exclude<NamespaceHandlers[Key], undefined>>
+          | undefined
+      }
       resolvedMiddleware?: Middleware
       namespace?: string
     } & Record<string, any>
@@ -77,13 +81,54 @@ declare module '@ioc:Ruby184/Socket.IO/Ws' {
     params: Record<string, any>
   }
 
+  /**
+   * Shape of websocket namespace class
+   */
   export interface WsNamespaceContract {
+    /**
+     * Define Regex matcher for a given param.
+     */
     where(param: string, matcher: NamespaceParamMatcher): this
+
+    /**
+     * Define controller namespace for a given socket.io namespace.
+     */
+    namespace(namespace: string): this
+
+    /**
+     * Define event handler which is executed on given event for namespace.
+     */
     on(event: string, handler: EventHandler): this
+
+    /**
+     * Define an array of middleware to be executed on the namespace.
+     */
     middleware(middleware: NamespaceMiddlewareHandler | NamespaceMiddlewareHandler[]): this
+
+    /**
+     * Define a handler which is executed after connected socket passed
+     * through the namespace middleware.
+     */
     connected(handler: ConnectHandler): this
+
+    /**
+     * Define a handler which is executed on socket disconnect before it left the rooms.
+     * This is the same as listening on the `disconnecting` event when using socket.io.
+     * https://socket.io/docs/v4/server-socket-instance/#disconnecting
+     */
     disconnecting(handler: DisconnectHandler): this
+
+    /**
+     * Define a handler which is executed on socket disconnect after it left the rooms.
+     * This is the same as listening on the `disconnect` event when using socket.io.
+     * https://socket.io/docs/v4/server-socket-instance/#disconnect
+     */
     disconnected(handler: DisconnectHandler): this
+
+    /**
+     * Returns serialized [[NamespaceDefinition]] that can be passed to the [[Store]]
+     * for registering the namespace.
+     */
     toJSON(): NamespaceJSON
   }
 
