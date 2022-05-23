@@ -20,6 +20,11 @@ import { Exception } from '@poppinss/utils'
 
 export class PreCompiler {
   /**
+   * The resolver used to resolve the controllers from IoC container
+   */
+  private resolver: IocResolverContract<any>
+
+  /**
    * Method to execute middleware using the middleware store
    */
   private executeMiddleware = (
@@ -29,6 +34,9 @@ export class PreCompiler {
     return this.middlewareStore.invokeMiddleware(middleware, params)
   }
 
+  /**
+   * Method to execute handler for connection, disconnect or disconnecting events
+   */
   public runConnectionHandler = (
     event: 'connection' | 'disconnect' | 'disconnecting',
     ctx: WsContextContract,
@@ -42,11 +50,6 @@ export class PreCompiler {
 
     return this.resolver.call(routeHandler, undefined, [ctx].concat(reason))
   }
-
-  /**
-   * The resolver used to resolve the controllers from IoC container
-   */
-  private resolver: IocResolverContract<any>
 
   constructor(container: IocContract, private middlewareStore: WsMiddlewareStoreContract) {
     this.resolver = container.getResolver(undefined, 'wsControllers', 'App/Controllers/Ws')
@@ -97,6 +100,9 @@ export class PreCompiler {
     this.compileMiddleware(nsp)
   }
 
+  /**
+   * Method to run middleware chain for given namespace
+   */
   public async runNamespaceMiddleware(ctx: WsContextContract) {
     const runner = ctx.namespace.meta.resolvedMiddleware!.runner().executor(this.executeMiddleware)
 
@@ -108,34 +114,23 @@ export class PreCompiler {
   }
 
   /**
-   * Method to run event handler with args and handle ack and errors
+   * Method to run event handler with given args
    */
   public async runEventHandler(event: string, ctx: WsContextContract, args: any[]) {
     const routeHandler = ctx.namespace.meta.resolvedHandlers![event]
 
-    const ack: (res: [Error | null, any]) => void =
-      args.length > 0 && typeof args[args.length - 1] === 'function' ? args.pop() : () => {}
-
-    try {
-      if (typeof routeHandler === 'undefined') {
-        throw new Exception(
-          `Cannot find a handler for event "${event}" in namespace "${ctx.namespace.pattern}"`,
-          500,
-          'E_MISSING_EVENT_HANDLER'
-        )
-      }
-
-      let returnValue: any
-
-      if (routeHandler.type === 'function') {
-        returnValue = await routeHandler.handler(ctx, ...args)
-      } else {
-        returnValue = await this.resolver.call(routeHandler, undefined, [ctx].concat(args))
-      }
-
-      ack([null, returnValue])
-    } catch (err) {
-      ack([err, null])
+    if (typeof routeHandler === 'undefined') {
+      throw new Exception(
+        `Cannot find a handler for event "${event}" in namespace "${ctx.namespace.pattern}"`,
+        500,
+        'E_MISSING_EVENT_HANDLER'
+      )
     }
+
+    if (routeHandler.type === 'function') {
+      return routeHandler.handler(ctx, ...args)
+    }
+
+    return this.resolver.call(routeHandler, undefined, [ctx].concat(args))
   }
 }

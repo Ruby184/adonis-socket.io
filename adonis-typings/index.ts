@@ -10,4 +10,5 @@
 /// <reference path="./ws.ts" />
 /// <reference path="./context.ts" />
 /// <reference path="./middleware.ts" />
+/// <reference path="./exception-handler.ts" />
 /// <reference path="./container.ts" />

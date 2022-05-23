@@ -142,7 +142,11 @@ export class WsServer implements WsContract {
 
   public async attach(): Promise<void> {
     this.commit()
-    this.attached = this.executor.attach(this.socketConfig)
+
+    this.attached = this.executor.attach(
+      this.socketConfig,
+      this.application.rcFile.raw.wsExceptionHandlerNamespace
+    )
   }
 
   public async close(): Promise<void> {

@@ -16,6 +16,7 @@ declare module '@ioc:Ruby184/Socket.IO/Ws' {
     FunctionMiddlewareHandler,
     WsMiddlewareStoreContract,
   } from '@ioc:Ruby184/Socket.IO/MiddlewareStore'
+  import { IocResolverLookupNode } from '@ioc:Adonis/Core/Application'
   import {
     RouteParamMatcher,
     RouteMatchersNode,
@@ -27,15 +28,8 @@ declare module '@ioc:Ruby184/Socket.IO/Ws' {
   export type DisconnectHandler = ((ctx: WsContextContract, reason: string) => any) | string
   export type NamespaceMiddlewareHandler = FunctionMiddlewareHandler | string
   export type ResolvedHandler<T> =
-    | {
-        type: 'function'
-        handler: Exclude<T, string>
-      }
-    | {
-        type: 'alias' | 'binding'
-        namespace: string
-        method: string
-      }
+    | { type: 'function'; handler: Exclude<T, string> }
+    | IocResolverLookupNode<string>
 
   export type NamespaceHandlers = Partial<{
     connection: ConnectHandler
@@ -43,6 +37,16 @@ declare module '@ioc:Ruby184/Socket.IO/Ws' {
     disconnecting: DisconnectHandler
     [event: string]: EventHandler
   }>
+
+  /**
+   * Error handler node
+   */
+  export type ErrorHandler = ((error: any, ctx: WsContextContract) => Promise<any>) | string
+
+  /**
+   * Shape of resolved error handler node
+   */
+  export type ResolvedErrorHandler = ResolvedHandler<ErrorHandler>
 
   export type NamespaceNode = {
     pattern: string

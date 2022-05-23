@@ -8,13 +8,19 @@
  */
 
 import type { ApplicationContract } from '@ioc:Adonis/Core/Application'
-import type { MatchedNamespace, WsConfig } from '@ioc:Ruby184/Socket.IO/Ws'
+import type { ErrorHandler, MatchedNamespace, WsConfig } from '@ioc:Ruby184/Socket.IO/Ws'
 import type { WsContextContract, WsSocket } from '@ioc:Ruby184/Socket.IO/WsContext'
 import type { Namespace, Server, Socket } from 'socket.io'
 import type { PreCompiler } from './PreCompiler'
 import type { Store } from './Store'
+import { ExceptionManager } from '../ExceptionManager'
 
 export class HandlerExecutor {
+  /**
+   * Exception manager to handle exceptions
+   */
+  private exception = new ExceptionManager(this.application.container)
+
   /**
    * Resolve bindings required for creating context from container
    */
@@ -69,66 +75,74 @@ export class HandlerExecutor {
     return ctx
   }
 
-  // TODO: handling of errors
   private handleConnection = (socket: WsSocket) => {
     const ctx: WsContextContract = socket.ctx!
 
     for (const evt of ['disconnecting', 'disconnect'] as const) {
       if (ctx.namespace.meta.resolvedHandlers![evt]) {
-        socket.on(evt, (reason: string) => {
-          this.precompiler.runConnectionHandler(evt, ctx, reason)
+        socket.on(evt, async (reason: string) => {
+          try {
+            await this.precompiler.runConnectionHandler(evt, ctx, reason)
+          } catch (error) {
+            await this.exception.handle(error, ctx)
+          }
         })
       }
     }
 
-    socket.onAny((event, ...args) => {
-      this.precompiler.runEventHandler(event, ctx, args)
+    socket.onAny(async (event, ...args) => {
+      const ack: (error: Error | null, response: any) => void =
+        args.length > 0 && typeof args[args.length - 1] === 'function' ? args.pop() : () => {}
+
+      try {
+        ack(null, await this.precompiler.runEventHandler(event, ctx, args))
+      } catch (error) {
+        ack(await this.exception.handle(error, ctx), null)
+      }
     })
-  }
 
-  // TODO: extract this to dedicated exception handler to report and handle
-  private toExtendedError(error: any): Error & { data: any } {
-    if (error.data) {
-      return error
-    }
-
-    error.data = {
-      code: error.code || 'E_UNKNOWN',
-      status: error.status || 500,
-      ...(process.env.NODE_ENV === 'development' ? { stack: error.stack } : {}),
-    }
-
-    return error
+    socket.on('error', async (error) => {
+      await this.exception.handle(error, ctx)
+    })
   }
 
   private addMiddlewareToNamespace = (namespace: Namespace) => {
     const matched = this.store.match(namespace.name)
 
+    if (!matched) {
+      return
+    }
+
     namespace.use(async (socket, next) => {
+      const ctx = this.getContext(socket, matched)
+
       try {
-        await this.precompiler.runNamespaceMiddleware(this.getContext(socket, matched!))
+        await this.precompiler.runNamespaceMiddleware(ctx)
         next()
-      } catch (err) {
-        next(this.toExtendedError(err))
+      } catch (error) {
+        next(await this.exception.handle(error, ctx))
       }
     })
+
+    namespace.on('connect', this.handleConnection)
   }
 
-  public attach(socketConfig: WsConfig): boolean {
+  public attach(socketConfig: WsConfig, exceptionHandler?: ErrorHandler): boolean {
     if (!this.Server.instance) {
       return false
     }
 
+    if (exceptionHandler) {
+      this.exception.registerHandler(exceptionHandler)
+    }
+
     // first define static namespaces to socket.io
     for (const nsp of this.store.statics()) {
-      this.addMiddlewareToNamespace(this.io.of(nsp, this.handleConnection))
+      this.addMiddlewareToNamespace(this.io.of(nsp))
     }
 
     // add checking of dynamic namespaces
-    this.nsp = this.io.of(
-      (name, _, next) => next(null, this.store.isDynamic(name)),
-      this.handleConnection
-    )
+    this.nsp = this.io.of((name, _, next) => next(null, this.store.isDynamic(name)))
 
     // when new dynamic namespace is created add middleware to it
     this.io.on('new_namespace', this.addMiddlewareToNamespace)

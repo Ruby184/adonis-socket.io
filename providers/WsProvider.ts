@@ -47,7 +47,18 @@ export default class WsProvider {
    */
   protected registerMiddlewareStore() {
     this.app.container.bind('Ruby184/Socket.IO/MiddlewareStore', () => {
-      return require('../src/MiddlewareStore').MiddlewareStore
+      const { MiddlewareStore } = require('../src/MiddlewareStore')
+      return MiddlewareStore
+    })
+  }
+
+  /**
+   * Registering `WsExceptionHandler` to the container.
+   */
+  protected registerWsExceptionHandler() {
+    this.app.container.bind('Ruby184/Socket.IO/WsExceptionHandler', () => {
+      const { WsExceptionHandler } = require('../src/WsExceptionHandler')
+      return WsExceptionHandler
     })
   }
 
@@ -58,6 +69,7 @@ export default class WsProvider {
     this.registerWs()
     this.registerWsContext()
     this.registerMiddlewareStore()
+    this.registerWsExceptionHandler()
   }
 
   /**
