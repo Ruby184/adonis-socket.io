@@ -5,6 +5,14 @@
 
 This package is trying to implement main ideas from [this Adonis RFC](https://github.com/thetutlage/rfcs/blob/develop/active-rfcs/0000-websockets.md). Package is not production ready until v1.0. Use it at your own risk.
 
+Currently implemented features:
+- define socket.io namespaces including dynamic ones with adonis-like routes syntax
+- add adonis-like class middlewares similar to route ones to namespaces
+- handle events on namespaces with controllers and allow to ack events with value returned from event handler
+- centralized exception handling similar to http
+- working with adonis auth middleware
+- more to come...
+
 ## Installation
 
 Install it from npm
@@ -22,7 +30,7 @@ node ace configure @ruby184/adonis-socket.io
 - [x] define static namespaces directly as socket.io namespaces and use matching only for dynamic ones (perf)
 - [ ] test everything
 - [ ] we should not create and use response, but return Proxy to intercept and throw error when user tries to use response in websocket context
-- [ ] extract errors handling to dedicated exception handler to report and handle
+- [x] extract errors handling to dedicated exception handler to report and handle
 - [ ] look at how to make easy integration of socket.io multi server support with adonis
 - [ ] look how we can make use of socket middleware which is a function that gets executed for every incoming Packet
 - [ ] handle transformaton of adonis cors config to socket.io as they are not 100% compatible
